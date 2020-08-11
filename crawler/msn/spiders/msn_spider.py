@@ -10,10 +10,13 @@ class MSNSpider(scrapy.Spider):
     allowed_domains = ["msn.com"]
 
     start_urls = []
+    categories = {}  # url -> (category, subcategory)
+
     with open(os.environ["MIND_NEWS_PATH"], 'r') as f:
         for l in f:
-            _, _, _, _, _, url, _, _ = l.strip('\n').split('\t')
+            _, category, subcategory, _, _, url, _, _ = l.strip('\n').split('\t')
             start_urls.append(url)
+            categories[url] = (category, subcategory)
 
     # start_urls = [
     #     # ss
@@ -38,9 +41,10 @@ class MSNSpider(scrapy.Spider):
         # parse nid, vert and subvert
         item['news_id'] = url.split('/')[-1].split('.')[-2]
         item['doc_type'] = self.doc_type[item['news_id']]
+        item['category'], item['subcategory'] = self.categories[url]
 
         # parse title from response
-        item['title'] = response.xpath('//title//text()').getall()
+        item['title'] = response.xpath('//title//text()').getall()[0]
 
         # parse body from response
         # type1: ar-nid
