@@ -43,7 +43,7 @@ def main(in_path, out_path):
     total = 0
     fails = 0
 
-    for entry in tqdm.tqdm(dataset[:500]):
+    for entry in tqdm.tqdm(dataset):
         true_url = url(entry['news_id'], entry['doc_type'], entry['category'], entry['subcategory'], entry['title'])
         total += 1
 
