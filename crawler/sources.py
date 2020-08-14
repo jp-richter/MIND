@@ -4,6 +4,7 @@ import copy
 import lxml.html
 import argparse
 import logging
+import tqdm
 
 _url = 'https://www.msn.com/en-us/{cat}/{subcat}/{title}/{dtype}-{nid}'
 
@@ -16,14 +17,14 @@ def find_news_source_by_url(url):
     response = requests.get(url)
 
     if not 200 <= response.status_code <= 300:
-        pass
+        raise ValueError('recieved status code {}'.format(response.status_code))
 
     html = lxml.html.fromstring(response.content)
 
-    content_node = html.xpath('//div[@id="main" and div/@class="content" and div/a/@title and div/a/@href]')
-    ref_node = content_node[0].xpath('div/a')
+    # content_node = html.xpath('//div[@id="main" and div/@class="content" and div/a/@title and div/a/@href]')
+    # ref_node = content_node[0].xpath('div/a')
 
-    # ref_node = html.xpath('//a[@href and @title]')
+    ref_node = html.xpath('//a[@href and @title]')
 
     href = ref_node[0].get('href')
     title = ref_node[0].get('title')
@@ -42,8 +43,8 @@ def main(in_path, out_path):
     total = 0
     fails = 0
 
-    for entry in dataset:
-        true_url = url(entry['news_id'], entry['doch_type'], entry['category'], entry['subcategory'], entry['title'])
+    for entry in tqdm.tqdm(dataset[:500]):
+        true_url = url(entry['news_id'], entry['doc_type'], entry['category'], entry['subcategory'], entry['title'])
         total += 1
 
         try:
@@ -55,7 +56,7 @@ def main(in_path, out_path):
             continue
 
         extended_entry = copy.deepcopy(entry)
-        extended_entry['source_name'] = title
+        extended_entry['source_name'] = title.replace('logo', '')
         extended_entry['source_url'] = href
 
         extended_dataset.append(extended_entry)
